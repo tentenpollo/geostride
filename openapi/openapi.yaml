@@ -1,0 +1,301 @@
+openapi: 3.0.3
+info:
+  title: GeoStride API
+  description: |
+    Generative walking route planner. Generates circular loops on
+    OpenStreetMap optimized for user-defined vibe preferences using
+    a custom Generative Cost Function.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Health check with OSM connectivity test
+      tags: [System]
+      responses:
+        '200':
+          description: API health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /cached-regions:
+    get:
+      operationId: listCachedRegions
+      summary: List cached graph regions
+      tags: [System]
+      responses:
+        '200':
+          description: Cached region names
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  regions:
+                    type: array
+                    items:
+                      type: string
+
+  /set-location:
+    post:
+      operationId: setLocation
+      summary: Store a location coordinate in session
+      tags: [Session]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [session_id, lat, lon]
+              properties:
+                session_id:
+                  type: string
+                lat:
+                  type: number
+                lon:
+                  type: number
+      responses:
+        '200':
+          description: Location stored
+
+  /get-route/{session_id}:
+    get:
+      operationId: getRoute
+      summary: Retrieve a generated route by session
+      tags: [Session]
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Route data
+        '404':
+          description: No route found
+
+  /execute:
+    post:
+      operationId: executeRoute
+      summary: Generate a circular walking route
+      tags: [Execution]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteRequest'
+      responses:
+        '200':
+          description: Generated route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ws/{session_id}:
+    get:
+      operationId: wsConnect
+      summary: WebSocket for real-time route delivery
+      tags: [Session]
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '101':
+          description: WebSocket upgrade
+
+components:
+  schemas:
+    Coordinate:
+      type: object
+      required: [lat, lon]
+      properties:
+        lat:
+          type: number
+          minimum: -90
+          maximum: 90
+        lon:
+          type: number
+          minimum: -180
+          maximum: 180
+
+    VibeWeights:
+      type: object
+      properties:
+        greenery:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.5
+        blue_space:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0
+        introvert_mode:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0
+        extrovert_mode:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0
+        safety_check:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.5
+        walkability:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.7
+
+    ExecuteRequest:
+      type: object
+      properties:
+        origin:
+          $ref: '#/components/schemas/Coordinate'
+        session_id:
+          type: string
+        duration_minutes:
+          type: integer
+          minimum: 5
+          maximum: 180
+          default: 30
+        vibes:
+          $ref: '#/components/schemas/VibeWeights'
+        no_go_zones:
+          type: array
+          items:
+            type: object
+            properties:
+              vertices:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Coordinate'
+
+    ExecuteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        geojson:
+          $ref: '#/components/schemas/GeoJSONFeatureCollection'
+        metadata:
+          $ref: '#/components/schemas/RouteMetadata'
+        execution_details:
+          type: object
+          properties:
+            algorithm:
+              type: string
+            nodes_explored:
+              type: integer
+            graph_size:
+              type: string
+            disjoint_percentage:
+              type: number
+            execution_time_ms:
+              type: number
+
+    RouteMetadata:
+      type: object
+      properties:
+        distance_meters:
+          type: number
+        estimated_duration_minutes:
+          type: number
+        vibe_score:
+          type: number
+        vibe_breakdown:
+          type: object
+          properties:
+            greenery:
+              type: number
+            blue_space:
+              type: number
+            quietness:
+              type: number
+            liveliness:
+              type: number
+            safety:
+              type: number
+            walkability:
+              type: number
+            overall:
+              type: number
+
+    GeoJSONFeatureCollection:
+      type: object
+      properties:
+        type:
+          type: string
+          default: FeatureCollection
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeoJSONFeature'
+
+    GeoJSONFeature:
+      type: object
+      properties:
+        type:
+          type: string
+        geometry:
+          type: object
+          properties:
+            type:
+              type: string
+            coordinates:
+              type: array
+              items:
+                type: array
+                items:
+                  type: number
+        properties:
+          type: object
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        version:
+          type: string
+        graph_loaded:
+          type: boolean
+        cached_regions:
+          type: array
+          items:
+            type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        error:
+          type: string
+        error_code:
+          type: string
