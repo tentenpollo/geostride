@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-%233178c6)](https://typescriptlang.org)
 
-A generative walking route planner that creates optimized, circular routes on OpenStreetMap based on your vibe preferences (greenery, quietness, safety, and more).
+A generative walking route planner that creates optimized, circular routes on OpenStreetMap based on your vibe preferences (greenery, quietness, safety, and more). Originally, based from the idea from our IBM watsonx orchestrate hackathon. 
 
 ## Architecture
 
