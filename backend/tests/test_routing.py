@@ -47,3 +47,40 @@ def test_no_path_returns_none():
 
     result = routing.find_shortest_path(0, 1)
     assert result is None
+
+
+def test_avoiding_edges_with_softer_penalty():
+    """
+    A softer penalty_multiplier should produce a shorter route than a hard one
+    when avoiding edges forces a detour.
+    """
+    graph = nx.MultiDiGraph()
+    # Linear graph: 0 -> 1 -> 2 -> 3
+    for i in range(4):
+        graph.add_node(i, y=0.0, x=float(i) * 0.01)
+    for u, v in [(0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2)]:
+        graph.add_edge(u, v, length=1000, highway='residential')
+
+    # Add a long detour: 1 -> 4 -> 3, each edge 5000m
+    graph.add_node(4, y=0.01, x=0.015)
+    graph.add_edge(1, 4, length=5000, highway='residential')
+    graph.add_edge(4, 3, length=5000, highway='residential')
+    graph.add_edge(4, 1, length=5000, highway='residential')
+    graph.add_edge(3, 4, length=5000, highway='residential')
+
+    cost_engine = CostFunctionEngine({})
+    vibe_engine = VibeEngine({})
+    routing = RoutingService(graph, cost_engine, vibe_engine)
+
+    # Avoid the direct edge 2->3
+    avoided = {(2, 3)}
+
+    hard = routing.find_route_avoiding_edges(
+        1, 3, {}, avoided, penalty_multiplier=100.0
+    )
+    soft = routing.find_route_avoiding_edges(
+        1, 3, {}, avoided, penalty_multiplier=1.0
+    )
+
+    # Soft penalty should allow reusing avoided edges, giving shorter route
+    assert soft.total_distance <= hard.total_distance

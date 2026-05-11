@@ -117,10 +117,10 @@ class VibeEngine:
                 lat=shop['lat'],
                 lon=shop['lon'],
                 strength=0.6,
-                radius_meters=50,
+                radius_meters=100,
                 vibe_type="liveliness"
             ))
-        
+
         # Food venues -> Liveliness magnets (stronger)
         for food in self.amenities.get('food', []):
             self.magnets.append(Magnet(
@@ -128,7 +128,7 @@ class VibeEngine:
                 lat=food['lat'],
                 lon=food['lon'],
                 strength=0.75,
-                radius_meters=75,
+                radius_meters=100,
                 vibe_type="liveliness"
             ))
     

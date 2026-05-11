@@ -27,6 +27,7 @@ class RoutingResult:
     vibe_profile: VibeProfile
     nodes_explored: int
     algorithm: str
+    edge_data_list: list[dict] | None = None
 
 
 class RoutingService:
@@ -220,7 +221,7 @@ class RoutingService:
         
         # Compute vibe profile for the route
         vibe_profile = self.vibe_engine.compute_route_vibe_profile(coords, edge_data_list)
-        
+
         return RoutingResult(
             path_nodes=path_nodes,
             path_coords=coords,
@@ -228,7 +229,8 @@ class RoutingService:
             total_time=total_time,
             vibe_profile=vibe_profile,
             nodes_explored=nodes_explored,
-            algorithm=algorithm
+            algorithm=algorithm,
+            edge_data_list=edge_data_list,
         )
     
     def find_shortest_path(
@@ -285,20 +287,22 @@ class RoutingService:
         dest_node: int,
         vibe_weights: dict[str, float],
         avoided_edges: set[tuple[int, int]],
-        algorithm: str = "astar"
+        algorithm: str = "astar",
+        penalty_multiplier: float = 100.0,
     ) -> RoutingResult:
         """
         Find route while avoiding specific edges.
-        
+
         Used for loop generation to ensure disjoint return path.
-        
+
         Args:
             origin_node: Starting node
             dest_node: Ending node
             vibe_weights: User's vibe preferences
             avoided_edges: Set of (u, v) tuples to avoid
             algorithm: Routing algorithm
-            
+            penalty_multiplier: How much to multiply cost of avoided edges
+
         Returns:
             RoutingResult
         """
@@ -307,16 +311,16 @@ class RoutingService:
             vibe_weights,
             base_weight='length'
         )
-        
+
         def penalized_weight_func(u: int, v: int, data: dict) -> float:
             base_cost = base_weight_func(u, v, data)
-            
+
             # Heavily penalize avoided edges (but don't completely block)
             if (u, v) in avoided_edges or (v, u) in avoided_edges:
-                return base_cost * 100  # 100x penalty
-            
+                return base_cost * penalty_multiplier
+
             return base_cost
-        
+
         if algorithm == "dijkstra":
             return self.dijkstra(origin_node, dest_node, penalized_weight_func)
         else:

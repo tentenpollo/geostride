@@ -53,3 +53,30 @@ def test_no_go_zone():
     engine.add_no_go_zone(5.0, 5.0, radius_meters=200)
     assert engine.is_in_no_go_zone(5.001, 5.001)
     assert not engine.is_in_no_go_zone(6.0, 6.0)
+
+
+def test_shop_magnet_radius_100m():
+    """Shops should be detected within 100m (aligned with cost function radius)."""
+    amenities = {
+        "parks": [],
+        "water": [],
+        "shops": [{"lat": 0.0, "lon": 0.0}],
+        "food": [],
+    }
+    engine = VibeEngine(amenities)
+    # 0.0005 degrees lat ≈ 55m, well within 100m radius
+    profile = engine.compute_point_vibe_profile(0.0005, 0.0)
+    assert profile.liveliness > 0.0
+
+
+def test_food_magnet_radius_100m():
+    """Food venues should be detected within 100m (aligned with cost function radius)."""
+    amenities = {
+        "parks": [],
+        "water": [],
+        "shops": [],
+        "food": [{"lat": 0.0, "lon": 0.0}],
+    }
+    engine = VibeEngine(amenities)
+    profile = engine.compute_point_vibe_profile(0.0005, 0.0)
+    assert profile.liveliness > 0.0
