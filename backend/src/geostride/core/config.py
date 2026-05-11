@@ -1,7 +1,9 @@
-from pydantic_settings import BaseSettings
-from pydantic import Field
 from functools import lru_cache
 from pathlib import Path
+
+from pydantic import Field
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
@@ -29,12 +31,13 @@ class Settings(BaseSettings):
     # Walking speed assumptions
     walking_speed_kmh: float = Field(default=4.5, description="Average walking speed km/h")
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "extra": "ignore",
+    }
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """Get cached settings instance."""
     return Settings()

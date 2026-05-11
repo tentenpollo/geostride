@@ -26,21 +26,21 @@ def test_quality_score_no_match():
 def test_generative_cost_max_quality():
     engine = CostFunctionEngine({})
     base_cost = 100
-    cost = engine.compute_generative_cost(base_cost, quality=1.0, smoothing=0.6)
+    cost = engine.compute_generative_cost(base_cost, quality_score=1.0, smoothing=0.6)
     assert cost == 40.0
 
 
 def test_generative_cost_zero_quality():
     engine = CostFunctionEngine({})
     base_cost = 100
-    cost = engine.compute_generative_cost(base_cost, quality=0.0, smoothing=0.6)
+    cost = engine.compute_generative_cost(base_cost, quality_score=0.0, smoothing=0.6)
     assert cost == 100.0
 
 
 def test_generative_cost_zero_smoothing():
     engine = CostFunctionEngine({})
     base_cost = 100
-    cost = engine.compute_generative_cost(base_cost, quality=1.0, smoothing=0.0)
+    cost = engine.compute_generative_cost(base_cost, quality_score=1.0, smoothing=0.0)
     assert cost == 100.0
 
 
@@ -57,6 +57,6 @@ def test_quality_score_partial_match():
 
 def test_cost_decreases_with_higher_quality():
     engine = CostFunctionEngine({})
-    low_quality_cost = engine.compute_generative_cost(100, quality=0.2, smoothing=0.6)
-    high_quality_cost = engine.compute_generative_cost(100, quality=0.8, smoothing=0.6)
+    low_quality_cost = engine.compute_generative_cost(100, quality_score=0.2, smoothing=0.6)
+    high_quality_cost = engine.compute_generative_cost(100, quality_score=0.8, smoothing=0.6)
     assert high_quality_cost < low_quality_cost

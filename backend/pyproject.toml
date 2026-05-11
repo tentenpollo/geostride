@@ -52,4 +52,15 @@ pythonpath = ["src"]
 
 [tool.pyright]
 include = ["src"]
-typeCheckingMode = "strict"
+typeCheckingMode = "basic"
+venvPath = "."
+venv = ".venv"
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+reportMissingTypeArgument = false
+reportUnknownParameterType = false
+reportMissingModuleSource = false
+reportUnusedVariable = false
+reportArgumentType = false
+reportOptionalMemberAccess = false

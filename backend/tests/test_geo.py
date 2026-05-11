@@ -1,5 +1,7 @@
 import math
+
 from geostride.utils.geo import haversine_distance
+
 
 def test_haversine_distance():
     # Same point should be 0

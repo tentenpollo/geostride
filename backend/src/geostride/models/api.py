@@ -1,12 +1,14 @@
+
 from pydantic import BaseModel, Field
-from typing import Optional
-from .core import Coordinate, VibeWeights, NoGoZone, RouteMetadata
+
+from .core import Coordinate, NoGoZone, RouteMetadata, VibeWeights
 from .geojson import GeoJSONFeatureCollection
+
 
 class ExecuteRequest(BaseModel):
     """Execution request."""
-    origin: Optional[Coordinate] = Field(default=None)
-    session_id: Optional[str] = Field(default=None)
+    origin: Coordinate | None = Field(default=None)
+    session_id: str | None = Field(default=None)
     duration_minutes: int = Field(default=30, ge=5, le=180)
     vibes: VibeWeights = Field(default_factory=VibeWeights)
     no_go_zones: list[NoGoZone] = Field(default_factory=list)

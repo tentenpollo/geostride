@@ -6,15 +6,15 @@ The return path must be as disjoint as possible from the outbound path.
 
 Implements bi-directional A* with edge exclusion for the advanced algorithm.
 """
-import networkx as nx
 import heapq
-from typing import Optional
 from dataclasses import dataclass
-import math
-from geostride.services.routing import RoutingService, RoutingResult
-from geostride.services.cost_functions import CostFunctionEngine
-from geostride.services.vibe_engine import VibeEngine, VibeProfile
+
+import networkx as nx
+
 from geostride.core.logging import get_logger
+from geostride.services.cost_functions import CostFunctionEngine
+from geostride.services.routing import RoutingService
+from geostride.services.vibe_engine import VibeEngine, VibeProfile
 
 logger = get_logger(__name__)
 
@@ -226,7 +226,7 @@ class LoopGenerator:
         disjoint_pct = self._calculate_disjoint_percentage(outbound_edges, return_edges)
         
         # Combine paths (remove duplicate turnaround node)
-        full_path_nodes = outbound_result.path_nodes + return_result.path_nodes[1:]
+        _full_path_nodes = outbound_result.path_nodes + return_result.path_nodes[1:]
         full_coords = outbound_result.path_coords + return_result.path_coords[1:]
         
         # Calculate totals

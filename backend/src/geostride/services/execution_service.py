@@ -8,25 +8,25 @@ Orchestrates the full route generation pipeline:
 4. Returns the route as GeoJSON with metadata and execution details
 """
 import time
-import networkx as nx
-from typing import Optional
-from geostride.core.logging import get_logger
 
+import networkx as nx
+
+from geostride.core.logging import get_logger
 from geostride.models import (
     ExecuteRequest,
     ExecuteResponse,
-    GeoJSONFeatureCollection,
+    ExecutionDetails,
     GeoJSONFeature,
+    GeoJSONFeatureCollection,
     GeoJSONGeometry,
     RouteMetadata,
     VibeBreakdown,
-    ExecutionDetails
 )
-from geostride.services.graph_loader import GraphLoader
 from geostride.services.cost_functions import CostFunctionEngine
-from geostride.services.vibe_engine import VibeEngine
-from geostride.services.routing import RoutingService
+from geostride.services.graph_loader import GraphLoader
 from geostride.services.loop_generator import LoopGenerator
+from geostride.services.routing import RoutingService
+from geostride.services.vibe_engine import VibeEngine
 from geostride.utils.geo import haversine_distance
 
 logger = get_logger(__name__)
@@ -52,26 +52,34 @@ class ExecutionService:
         self.loop_generator = loop_generator
     
     def execute(self, request: ExecuteRequest) -> ExecuteResponse:
-        """Load the graph, apply vibe-weighted costs, generate a circular route, and return GeoJSON."""
+        """Load the graph, apply vibe costs, generate a circular route, and return GeoJSON."""
         start_time = time.time()
         
         try:
             # Get nearest node to origin
-            logger.info(f"Finding nearest node to origin: lat={request.origin.lat}, lon={request.origin.lon}")
+            logger.info(
+                "Finding nearest node to origin: "
+                f"lat={request.origin.lat}, lon={request.origin.lon}"
+            )
             
             # Debug: Check graph bounds
-            import networkx as nx
             nodes = list(self.graph.nodes(data=True))
             lats = [data['y'] for _, data in nodes]
             lons = [data['x'] for _, data in nodes]
-            logger.info(f"Graph bounds: lat [{min(lats):.6f}, {max(lats):.6f}], lon [{min(lons):.6f}, {max(lons):.6f}]")
+            logger.info(
+                f"Graph bounds: lat [{min(lats):.6f}, {max(lats):.6f}], "
+                f"lon [{min(lons):.6f}, {max(lons):.6f}]"
+            )
             logger.info(f"Total nodes in graph: {len(nodes)}")
             
             # Find all nodes within 500m of origin
             nearby_nodes = []
             for node_id, node_data in nodes:
                 node_lat, node_lon = node_data['y'], node_data['x']
-                dist = haversine_distance(request.origin.lat, request.origin.lon, node_lat, node_lon)
+                dist = haversine_distance(
+                    request.origin.lat, request.origin.lon,
+                    node_lat, node_lon
+                )
                 if dist < 500:
                     nearby_nodes.append((node_id, dist))
             nearby_nodes.sort(key=lambda x: x[1])
@@ -93,20 +101,32 @@ class ExecutionService:
             
             # If nearest node is too far (>200m), check if we need to reload graph
             if dist > 200:
-                logger.warning(f"Nearest node is {dist:.1f}m away - walking network may be sparse at this location")
+                logger.warning(
+                    f"Nearest node is {dist:.1f}m away - "
+                    "walking network may be sparse at this location"
+                )
                 if not nearby_nodes:
-                    logger.error(f"No walking network nodes within 500m of origin! This area may not have mapped footpaths.")
+                    logger.error(
+                        "No walking network nodes within 500m of origin! "
+                        "This area may not have mapped footpaths."
+                    )
                     # Try to find closest node regardless of distance
                     closest_node = None
                     closest_dist = float('inf')
                     for node_id, node_data in nodes:
                         node_lat, node_lon = node_data['y'], node_data['x']
-                        d = haversine_distance(request.origin.lat, request.origin.lon, node_lat, node_lon)
+                        d = haversine_distance(
+                            request.origin.lat, request.origin.lon,
+                            node_lat, node_lon
+                        )
                         if d < closest_dist:
                             closest_dist = d
                             closest_node = node_id
                     if closest_node and closest_dist < dist:
-                        logger.info(f"Using manually found closest node {closest_node} at {closest_dist:.1f}m")
+                        logger.info(
+                            f"Using manually found closest node "
+                            f"{closest_node} at {closest_dist:.1f}m"
+                        )
                         origin_node = closest_node
                         node_lat, node_lon = self.graph_loader.get_node_coords(origin_node)
             
@@ -177,7 +197,10 @@ class ExecutionService:
             execution_details = ExecutionDetails(
                 algorithm="dijkstra",
                 nodes_explored=loop_result.nodes_explored,
-                graph_size=f"{self.graph.number_of_nodes():,} nodes, {self.graph.number_of_edges():,} edges",
+                graph_size=(
+                    f"{self.graph.number_of_nodes():,} nodes, "
+                    f"{self.graph.number_of_edges():,} edges"
+                ),
                 disjoint_percentage=loop_result.disjoint_percentage,
                 execution_time_ms=execution_time_ms
             )
@@ -197,7 +220,7 @@ class ExecutionService:
             
         except Exception as e:
             logger.error(f"Route execution failed: {e}")
-            raise ValueError(f"Route generation failed: {str(e)}")
+            raise ValueError(f"Route generation failed: {str(e)}") from e
     
     def get_graph_info(self) -> dict:
         """Get information about the loaded graph."""

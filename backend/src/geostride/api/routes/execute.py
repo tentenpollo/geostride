@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from geostride.core.dependencies import get_graph_loader, get_session_store
-from geostride.core.session import SessionStore
 from geostride.core.logging import get_logger
-from geostride.models import ExecuteRequest, ExecuteResponse, ExecuteErrorResponse, Coordinate
-from geostride.services.graph_loader import GraphLoader
+from geostride.core.session import SessionStore
+from geostride.models import Coordinate, ExecuteErrorResponse, ExecuteRequest, ExecuteResponse
 from geostride.services.cost_functions import CostFunctionEngine
-from geostride.services.vibe_engine import VibeEngine
-from geostride.services.routing import RoutingService
-from geostride.services.loop_generator import LoopGenerator
 from geostride.services.execution_service import ExecutionService
+from geostride.services.graph_loader import GraphLoader
+from geostride.services.loop_generator import LoopGenerator
+from geostride.services.routing import RoutingService
+from geostride.services.vibe_engine import VibeEngine
 
 logger = get_logger(__name__)
 
@@ -41,8 +41,8 @@ def _build_execution_service(
 async def execute_route(
     request: ExecuteRequest,
     http_request: Request,
-    graph_loader: GraphLoader = Depends(get_graph_loader),
-    session_store: SessionStore = Depends(get_session_store),
+    graph_loader: GraphLoader = Depends(get_graph_loader),  # noqa: B008
+    session_store: SessionStore = Depends(get_session_store),  # noqa: B008
 ) -> ExecuteResponse:
     try:
         origin = request.origin
@@ -83,10 +83,10 @@ async def execute_route(
         logger.error("Route execution failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )
+        ) from e
     except Exception as e:
         logger.exception("Unexpected error during route execution")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Route generation failed: {str(e)}",
-        )
+        ) from e

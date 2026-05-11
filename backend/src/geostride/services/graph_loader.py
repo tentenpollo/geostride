@@ -4,15 +4,14 @@ OSM Graph Loader Service
 Handles downloading, caching, and loading OpenStreetMap walking networks
 using OSMnx. Includes amenity data enrichment for vibe scoring.
 """
-import osmnx as ox
-import networkx as nx
-from pathlib import Path
-from typing import Optional
 import hashlib
 import json
-import logging
 import math
 import time
+from pathlib import Path
+
+import networkx as nx
+import osmnx as ox
 
 from geostride.core.logging import get_logger
 
@@ -31,9 +30,9 @@ class GraphLoader:
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.ttl_seconds = ttl_hours * 3600
-        self._graph: Optional[nx.MultiDiGraph] = None
+        self._graph: nx.MultiDiGraph | None = None
         self._amenities: dict = {}
-        self._current_region: Optional[str] = None
+        self._current_region: str | None = None
         
         # Configure OSMnx
         ox.settings.use_cache = True
@@ -137,8 +136,11 @@ class GraphLoader:
         cache_key = self._get_cache_key(place)
         amenity_cache = self.cache_dir / f"amenities_{cache_key}.json"
         
-        if amenity_cache.exists() and time.time() - amenity_cache.stat().st_mtime < self.ttl_seconds:
-            with open(amenity_cache, 'r') as f:
+        if (
+            amenity_cache.exists()
+            and time.time() - amenity_cache.stat().st_mtime < self.ttl_seconds
+        ):
+            with open(amenity_cache) as f:
                 self._amenities = json.load(f)
             logger.info(f"Loaded cached amenities for {place}")
             return
@@ -154,8 +156,11 @@ class GraphLoader:
         cache_key = self._get_cache_key_coords(lat, lon, dist)
         amenity_cache = self.cache_dir / f"amenities_{cache_key}.json"
         
-        if amenity_cache.exists() and time.time() - amenity_cache.stat().st_mtime < self.ttl_seconds:
-            with open(amenity_cache, 'r') as f:
+        if (
+            amenity_cache.exists()
+            and time.time() - amenity_cache.stat().st_mtime < self.ttl_seconds
+        ):
+            with open(amenity_cache) as f:
                 self._amenities = json.load(f)
             return
         
@@ -281,7 +286,7 @@ class GraphLoader:
         return amenities
     
     @property
-    def graph(self) -> Optional[nx.MultiDiGraph]:
+    def graph(self) -> nx.MultiDiGraph | None:
         """Get the currently loaded graph."""
         return self._graph
     

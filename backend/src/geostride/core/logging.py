@@ -1,6 +1,8 @@
 import logging
-import structlog
 import sys
+
+import structlog
+
 
 def configure_logging(debug: bool = False):
     """Configure structured logging using structlog."""

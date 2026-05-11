@@ -1,5 +1,6 @@
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import Dict
+
 from geostride.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -8,7 +9,7 @@ router = APIRouter(tags=["Session Management"])
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: Dict[str, WebSocket] = {}
+        self.active_connections: dict[str, WebSocket] = {}
 
     async def connect(self, websocket: WebSocket, session_id: str):
         await websocket.accept()
@@ -29,7 +30,10 @@ class ConnectionManager:
                 })
                 logger.info("Route sent via WebSocket", session_id=session_id)
             except Exception as e:
-                logger.error("Failed to send route via WebSocket", error=str(e), session_id=session_id)
+                logger.error(
+                    "Failed to send route via WebSocket",
+                    error=str(e), session_id=session_id
+                )
 
 
 @router.websocket("/ws/{session_id}")
@@ -37,6 +41,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
     await websocket.app.state.ws_manager.connect(websocket, session_id)
     try:
         while True:
-            data = await websocket.receive_text()
+            _data = await websocket.receive_text()
     except WebSocketDisconnect:
         websocket.app.state.ws_manager.disconnect(session_id)

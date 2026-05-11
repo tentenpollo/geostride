@@ -19,6 +19,7 @@ backend/.coverage
 backend/htmlcov/
 backend/data/cache/
 *.pyc
+*.egg-info/
 
 # OS
 .DS_Store

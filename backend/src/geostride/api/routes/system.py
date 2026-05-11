@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends
-from geostride.models import HealthResponse
-from geostride.core.dependencies import get_graph_loader
-from geostride.services.graph_loader import GraphLoader
 import httpx
+from fastapi import APIRouter, Depends
+
+from geostride.core.dependencies import get_graph_loader
+from geostride.models import HealthResponse
+from geostride.services.graph_loader import GraphLoader
 
 router = APIRouter(tags=["System"])
 
 @router.get("/health", response_model=HealthResponse)
-async def health_check(graph_loader: GraphLoader = Depends(get_graph_loader)):
+async def health_check(graph_loader: GraphLoader = Depends(get_graph_loader)):  # noqa: B008
     """Check API health and graph status."""
     
     # Check OSM Connectivity
@@ -28,7 +29,7 @@ async def health_check(graph_loader: GraphLoader = Depends(get_graph_loader)):
     )
 
 @router.get("/cached-regions")
-async def list_cached_regions(graph_loader: GraphLoader = Depends(get_graph_loader)):
+async def list_cached_regions(graph_loader: GraphLoader = Depends(get_graph_loader)):  # noqa: B008
     """List all cached graph regions."""
     if graph_loader is None:
         return {"regions": []}

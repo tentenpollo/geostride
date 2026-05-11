@@ -3,13 +3,14 @@ Routing Service
 
 Implements Dijkstra and A* pathfinding with custom vibe-weighted costs.
 """
-import networkx as nx
 import heapq
-from typing import Optional, List, Tuple, Callable
-from dataclasses import dataclass
 import math
-from geostride.core.logging import get_logger
+from collections.abc import Callable
+from dataclasses import dataclass
 
+import networkx as nx
+
+from geostride.core.logging import get_logger
 from geostride.services.cost_functions import CostFunctionEngine
 from geostride.services.vibe_engine import VibeEngine, VibeProfile
 
@@ -230,6 +231,24 @@ class RoutingService:
             algorithm=algorithm
         )
     
+    def find_shortest_path(
+        self,
+        origin_node: int,
+        dest_node: int
+    ) -> RoutingResult | None:
+        """
+        Find shortest path using Dijkstra with default (length-only) weights.
+
+        Returns None if no path exists between the nodes.
+        """
+        try:
+            weight_func = self.cost_engine.create_weight_function(
+                self.graph, {}, 'length'
+            )
+            return self.dijkstra(origin_node, dest_node, weight_func)
+        except ValueError:
+            return None
+
     def find_route(
         self,
         origin_node: int,

@@ -5,9 +5,7 @@ Implements the Magnet and Repellent system for route scoring.
 Magnets attract routes toward desirable features.
 Repellents push routes away from undesirable features.
 """
-from dataclasses import dataclass, field
-from typing import Optional
-import math
+from dataclasses import dataclass
 
 from geostride.utils.geo import haversine_distance
 
@@ -157,6 +155,15 @@ class VibeEngine:
             radius_meters=radius_meters,
             vibe_type="all"  # Affects all vibes
         ))
+
+    def is_in_no_go_zone(self, lat: float, lon: float) -> bool:
+        """Check if a point is within any no-go zone."""
+        for repellent in self.repellents:
+            if repellent.name == "no_go_zone":
+                dist = haversine_distance(lat, lon, repellent.lat, repellent.lon)
+                if dist <= repellent.radius_meters:
+                    return True
+        return False
     
 
     
@@ -216,7 +223,7 @@ class VibeEngine:
     def compute_point_vibe_profile(
         self,
         lat: float, lon: float,
-        edge_data: Optional[dict] = None
+        edge_data: dict | None = None
     ) -> VibeProfile:
         """
         Compute full vibe profile for a point.
@@ -287,7 +294,7 @@ class VibeEngine:
     def compute_route_vibe_profile(
         self,
         route_coords: list[tuple[float, float]],
-        edge_data_list: Optional[list[dict]] = None
+        edge_data_list: list[dict] | None = None
     ) -> VibeProfile:
         """
         Compute aggregate vibe profile for an entire route.

@@ -5,10 +5,9 @@ Implements the core formula: Cg = C_base * (1 - Quality_Score)
 
 This "demystifies" the routing by showing how vibes translate to edge weights.
 """
-import networkx as nx
-from typing import Optional
 from dataclasses import dataclass
-import math
+
+import networkx as nx
 
 from geostride.utils.geo import haversine_distance
 
@@ -134,7 +133,10 @@ class CostFunctionEngine:
         
         # Greenery score: Based on nearby parks
         parks_nearby = self._count_nearby_pois(mid_lat, mid_lon, self._park_coords, 150)
-        greenery = min(1.0, parks_nearby / 2) if parks_nearby > 0 else 0.05  # Low default to penalize non-green areas
+        greenery = (
+            min(1.0, parks_nearby / 2) if parks_nearby > 0
+            else 0.05  # Low default to penalize non-green areas
+        )
         
         # Blue space score: Based on nearby water
         water_nearby = self._count_nearby_pois(mid_lat, mid_lon, self._water_coords, 200)
@@ -300,7 +302,10 @@ class CostFunctionEngine:
                 highway = highway[0]
             
             # Check if user wants greenery or quietness
-            wants_nature = vibe_weights.get('greenery', 0) > 0.5 or vibe_weights.get('introvert_mode', 0) > 0.5
+            wants_nature = (
+                vibe_weights.get('greenery', 0) > 0.5
+                or vibe_weights.get('introvert_mode', 0) > 0.5
+            )
             
             if wants_nature:
                 # Major highways to avoid when seeking nature/quietness

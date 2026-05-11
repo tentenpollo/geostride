@@ -1,16 +1,20 @@
 import time
-from typing import Optional, Dict, Any
+from typing import Any
+
 
 class SessionStore:
     """In-memory session store with TTL."""
     def __init__(self, ttl_seconds: int = 3600):
         self.ttl_seconds = ttl_seconds
-        self._sessions: Dict[str, Dict[str, Any]] = {}
+        self._sessions: dict[str, dict[str, Any]] = {}
     
     def _cleanup(self):
         """Remove expired sessions."""
         now = time.time()
-        expired = [sid for sid, data in self._sessions.items() if now - data.get('timestamp', 0) > self.ttl_seconds]
+        expired = [
+            sid for sid, data in self._sessions.items()
+            if now - data.get('timestamp', 0) > self.ttl_seconds
+        ]
         for sid in expired:
             del self._sessions[sid]
             
@@ -21,7 +25,7 @@ class SessionStore:
         self._sessions[session_id][key] = value
         self._sessions[session_id]['timestamp'] = time.time()
         
-    def get(self, session_id: str, key: str) -> Optional[Any]:
+    def get(self, session_id: str, key: str) -> Any | None:
         self._cleanup()
         session = self._sessions.get(session_id)
         if session:

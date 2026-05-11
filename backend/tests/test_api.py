@@ -1,10 +1,9 @@
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import MagicMock, patch
 
-from geostride.main import app
 from geostride.core.session import SessionStore
-from geostride.services.graph_loader import GraphLoader
+from geostride.main import app
 
 
 @pytest.fixture
